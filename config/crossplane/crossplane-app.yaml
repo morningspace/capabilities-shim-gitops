@@ -1,7 +1,6 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  creationTimestamp: null
   name: crossplane-app
   namespace: argocd
 spec:
@@ -12,6 +11,7 @@ spec:
   source:
     repoURL: https://charts.crossplane.io/stable
     chart: crossplane
+    targetRevision: 1.4.1
   syncPolicy:
     automated:
       prune: true
