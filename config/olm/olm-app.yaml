@@ -10,7 +10,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    repoURL: https://github.com/operator-framework/operator-lifecycle-manager.git
+    repoURL: https://github.com/operator-framework/operator-lifecycle-manager
     path: deploy/upstream/quickstart
     targetRevision: HEAD
   syncPolicy:
