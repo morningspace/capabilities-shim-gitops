@@ -25,17 +25,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
-  ignoreDifferences:
-    - group: argoproj.io
-      jsonPointers:
-        - /status
-      kind: Application
-status:
-  health: {}
-  summary: {}
-  sync:
-    comparedTo:
-      destination: {}
-      source:
-        repoURL: "https://charts.crossplane.io/stable"
-    status: ""
