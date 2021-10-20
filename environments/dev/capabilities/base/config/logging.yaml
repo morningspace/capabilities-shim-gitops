@@ -5,7 +5,7 @@ metadata:
     # capabilities.morningspace.io/operator-namespace: operators
     capabilities.morningspace.io/provider-config: kubernetes-provider
   name: my-logging-stack
-  namespace: default
+  namespace: dev
 spec:
   parameters:
     esVersion: 7.13.3
