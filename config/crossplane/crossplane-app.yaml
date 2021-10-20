@@ -32,5 +32,4 @@ status:
     comparedTo:
       destination: {}
       source:
-        repoURL: ""
-    status: ""
+        repoURL: "https://charts.crossplane.io/stable"
