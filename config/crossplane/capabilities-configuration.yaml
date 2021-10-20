@@ -2,6 +2,8 @@ apiVersion: pkg.crossplane.io/v1
 kind: Configuration
 metadata:
   name: capabilities-shim
+  annotations:
+    argocd.argoproj.io/sync-wave: "150"
 spec:
   ignoreCrossplaneConstraints: false
   package: quay.io/moyingbj/capabilities-shim:v0.0.1

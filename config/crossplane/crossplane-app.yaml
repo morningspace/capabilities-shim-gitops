@@ -12,6 +12,8 @@ kind: Application
 metadata:
   name: crossplane-app
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "100"
 spec:
   destination:
     namespace: crossplane-system
