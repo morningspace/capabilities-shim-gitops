@@ -11,7 +11,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    repoURL: 'https://github.com/morningspace/capabilities-shim-gitops.git'
+    repoURL: https://github.com/morningspace/capabilities-shim-gitops
     path: environments/dev
     targetRevision: HEAD
   syncPolicy:
