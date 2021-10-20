@@ -1,0 +1,26 @@
+---
+apiVersion: kubernetes.crossplane.io/v1alpha1
+kind: Object
+metadata:
+  name: kibana-my-logging-stack
+spec:
+  references:
+  - fromObject:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      name: csv-my-logging-stack
+      fieldPath: status.atProvider.manifest.status.phase
+  forProvider:
+    manifest:
+      apiVersion: kibana.k8s.elastic.co/v1
+      kind: Kibana
+      metadata:
+        name: my-logging-stack
+        namespace: default
+      spec:
+        version: 7.13.3
+        elasticsearchRef:
+          name: my-logging-stack
+        count: 1
+  providerConfigRef:
+    name: kubernetes-provider
