@@ -1,0 +1,11 @@
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  namespace: operators
+  name: {{.Values.metadata.name}}
+spec:
+  channel: stable
+  name: elastic-cloud-eck
+  source: operatorhubio-catalog
+  sourceNamespace: olm
