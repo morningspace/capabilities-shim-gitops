@@ -4,7 +4,7 @@ metadata:
   annotations:
     # capabilities.morningspace.io/operator-namespace: operators
     capabilities.morningspace.io/provider-config: kubernetes-provider
-  name: my-logging-stack
+  name: my-logging-stack-dev
   namespace: dev
 spec:
   parameters:
