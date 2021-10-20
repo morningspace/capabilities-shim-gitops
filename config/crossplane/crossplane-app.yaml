@@ -33,3 +33,4 @@ status:
       destination: {}
       source:
         repoURL: "https://charts.crossplane.io/stable"
+    status: ""
