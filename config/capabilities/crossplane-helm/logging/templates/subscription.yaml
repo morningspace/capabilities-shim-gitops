@@ -1,0 +1,20 @@
+---
+apiVersion: kubernetes.crossplane.io/v1alpha1
+kind: Object
+metadata:
+  name: sub-{{.Values.metadata.name}}
+spec:
+  forProvider:
+    manifest:
+      apiVersion: operators.coreos.com/v1alpha1
+      kind: Subscription
+      metadata:
+        namespace: operators
+        name: {{.Values.metadata.name}}
+      spec:
+        channel: stable
+        name: elastic-cloud-eck
+        source: operatorhubio-catalog
+        sourceNamespace: olm
+  providerConfigRef:
+    name: {{.Values.spec.providerConfigRef.name}}

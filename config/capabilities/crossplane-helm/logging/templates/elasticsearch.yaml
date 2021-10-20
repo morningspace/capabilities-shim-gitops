@@ -1,0 +1,28 @@
+---
+apiVersion: kubernetes.crossplane.io/v1alpha1
+kind: Object
+metadata:
+  name: elasticsearch-{{.Values.metadata.name}}
+spec:
+  references:
+  - fromObject:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      name: csv-{{.Values.metadata.name}}
+      fieldPath: status.atProvider.manifest.status.phase
+  forProvider:
+    manifest:
+      apiVersion: elasticsearch.k8s.elastic.co/v1
+      kind: Elasticsearch
+      metadata:
+        name: {{.Values.metadata.name}}
+        namespace: {{.Values.metadata.namespace}}
+      spec:
+        version: {{.Values.spec.parameters.esVersion}}
+        nodeSets:
+        - name: default
+          count: 1
+          config:
+            node.store.allow_mmap: false
+  providerConfigRef:
+    name: {{.Values.spec.providerConfigRef.name}}

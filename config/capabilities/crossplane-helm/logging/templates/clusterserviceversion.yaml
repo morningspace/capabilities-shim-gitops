@@ -1,0 +1,23 @@
+---
+apiVersion: kubernetes.crossplane.io/v1alpha1
+kind: Object
+metadata:
+  name: csv-{{.Values.metadata.name}}
+  annotations:
+    kubernetes.crossplane.io/managementType: "ObservableAndDeletable"
+spec:
+  references:
+  - fromObject:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      name: sub-{{.Values.metadata.name}}
+      fieldPath: status.atProvider.manifest.status.currentCSV
+    toFieldPath: spec.forProvider.manifest.metadata.name
+  forProvider:
+    manifest:
+      apiVersion: operators.coreos.com/v1alpha1
+      kind: ClusterServiceVersion
+      metadata:
+        namespace: operators
+  providerConfigRef:
+    name: {{.Values.spec.providerConfigRef.name}}

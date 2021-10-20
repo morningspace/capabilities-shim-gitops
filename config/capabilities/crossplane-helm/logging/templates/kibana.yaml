@@ -1,0 +1,26 @@
+---
+apiVersion: kubernetes.crossplane.io/v1alpha1
+kind: Object
+metadata:
+  name: kibana-{{.Values.metadata.name}}
+spec:
+  references:
+  - fromObject:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      name: csv-{{.Values.metadata.name}}
+      fieldPath: status.atProvider.manifest.status.phase
+  forProvider:
+    manifest:
+      apiVersion: kibana.k8s.elastic.co/v1
+      kind: Kibana
+      metadata:
+        name: {{.Values.metadata.name}}
+        namespace: {{.Values.metadata.namespace}}
+      spec:
+        version: {{.Values.spec.parameters.kibanaVersion}}
+        elasticsearchRef:
+          name: {{.Values.metadata.name}}
+        count: 1
+  providerConfigRef:
+    name: {{.Values.spec.providerConfigRef.name}}
