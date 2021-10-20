@@ -16,6 +16,7 @@ spec:
       kind: Kibana
       metadata:
         name: my-logging-stack
+        namespace: default
       spec:
         version: 7.13.3
         elasticsearchRef:
