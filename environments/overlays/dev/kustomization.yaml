@@ -1,8 +1,12 @@
-namespace: dev
+# namespace: dev
+
+resources:
+  - cluster-config.json
+  - namespace.yaml
+  - logging-claim.yaml
 
 bases:
   - ../../base
-
-patchesStrategicMerge:
-  - namespace.yaml
-  - logging-claim.yaml
+  
+# patchesStrategicMerge:
+#   - logging-claim.yaml
