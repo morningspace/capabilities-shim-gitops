@@ -1,5 +1,0 @@
-resources:
-- namespace.yaml
-- cluster-config.json
-- provider-config.yaml
-- logging.yaml

@@ -1,0 +1,5 @@
+---
+resources:
+  - cluster-config.json
+  - provider-config.yaml
+  - logging-claim.yaml
