@@ -142,7 +142,7 @@ Before that, there is one thing you may need to know: Crossplane and Helm are no
 
 ### Crossplane Composition vs. Helm Templates
 
-A Crossplane `Composition` resource defines way of composing a set of Kubernetes resources. It is equivalent to Helm templates which include a set of template files and each file maps to one or more Kubernetes resources.
+A Crossplane `Composition` resource defines way of composing a set of Kubernetes resources. It is equivalent to Helm templates which include a set of template files and each file maps to one or more Kubernetes resources. The difference is that Composition organizes resources in a monolithic way where all resources are defined in the same file. But for Helm templates, they are separate files under the same folder.
 
 Instead of templating, Crossplane renders the `Composition` resource by extracting values from `CompositeResource` (XR) or `CompositeResourceClaim` (XRC) resource and patching it to specific fields on managed resources. This is very similar to Kustomize.
 
