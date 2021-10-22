@@ -29,13 +29,13 @@ There are a few reasons that I can see how Crossplane can fit into the GitOps re
 
 > A good example such as Terraform provider allows people to integrate existing Terraform automation assets into Crossplane and modeled as Kubernetes custom resource. See: https://github.com/crossplane-contrib/provider-terraform
 
-Turn everything into Kubernetes API no matter what kind of backend it is so that can be handled consistently using Kubernetes native way. This is what we store in git and how GitOps tool drives the flow.
+Turn everything into Kubernetes API no matter what kind of backend it is so that can be handled consistently using Kubernetes native way. As a result, those Kubernetes custom resources are what we store in git which drive the GitOps flow. Using Crossplane opens the door to gitopsifying everything for us!
 
 ## Bootstrap: Deploy Crossplane
 
 When using Crossplane, usually you will have Crossplane with a set of providers and optionally configuration packages installed on your cluster. Since Crossplane works as a control plane to drive infrastructure and application provisioning and composing, it can be co-located with Argo CD on the same cluster as a GitOps control plane.
 
-Interestingly, if you have already installed Argo CD, you can install everything else using Argo CD including Crossplane itself. The only thing you need to do is to create an Argo `Application` that points to the helm repository where hosts the Crossplane helm charts. Check below YAML manifest into git, you will see Argo CD drives the Crossplane installing automatically.
+Interestingly, if you have already installed Argo CD, you can take Argo CD as a top level "installer" which can help to install everything else including Crossplane itself. The only thing you need to do is to create an Argo `Application` that points to the helm repository where hosts the Crossplane helm charts. Check below YAML manifest into git, you will see Argo CD drives the Crossplane installing automatically.
 
 ```yaml
 ---
