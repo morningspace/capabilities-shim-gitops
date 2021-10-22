@@ -121,3 +121,5 @@ After the encrypted secret is generated, push it to git and let Argo CD to synch
 > There are alternative approaches to handle secrets in GitOps, e.g. store secrets in external storage such as HashiCorp Vault, then store the secret key in git. It is not covered in this article.
 
 Now that you have launched the environment with all the prerequisites ready including Crossplane, you can start to push application manifests in git to trigger the application provisioning driven by GitOps. In next article, I will explore are several ways that I experimented when using Crossplane and Argo CD to provision applications.
+
+*(To be continued)*
