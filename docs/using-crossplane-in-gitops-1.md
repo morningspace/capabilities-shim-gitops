@@ -29,7 +29,7 @@ There are a few reasons that I can see how Crossplane can fit into the GitOps re
 
 > A good example such as Terraform provider allows people to integrate existing Terraform automation assets into Crossplane and modeled as Kubernetes custom resource. See: https://github.com/crossplane-contrib/provider-terraform
 
-Turn everything into Kubernetes API no matter what kind of backend it is so that can be handled consistently using Kubernetes native way. As a result, those Kubernetes custom resources are what we store in git which drive the GitOps flow. Using Crossplane opens the door to gitopsifying everything for us!
+Turn everything into Kubernetes API no matter what kind of backend it is so that can be handled consistently using Kubernetes native way. As a result, those Kubernetes native objects are what we store in git which drive the GitOps flow. Using Crossplane opens the door to gitopsifying everything for us!
 
 ## Bootstrap: Deploy Crossplane
 
