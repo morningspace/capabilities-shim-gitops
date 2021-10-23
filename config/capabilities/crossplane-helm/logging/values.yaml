@@ -1,7 +1,7 @@
 ---
 metadata:
   name: my-logging-stack
-  namespace: default
+  namespace: dev
 spec:
   parameters:
     esVersion: 7.13.3
