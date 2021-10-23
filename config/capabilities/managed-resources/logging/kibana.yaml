@@ -23,4 +23,4 @@ spec:
           name: my-logging-stack
         count: 1
   providerConfigRef:
-    name: kubernetes-provider
+    name: provider-config-dev

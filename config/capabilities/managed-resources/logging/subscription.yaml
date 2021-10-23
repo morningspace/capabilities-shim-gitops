@@ -17,4 +17,4 @@ spec:
         source: operatorhubio-catalog
         sourceNamespace: olm
   providerConfigRef:
-    name: kubernetes-provider
+    name: provider-config-dev

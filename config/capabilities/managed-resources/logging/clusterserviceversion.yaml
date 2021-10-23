@@ -20,4 +20,4 @@ spec:
       metadata:
         namespace: operators
   providerConfigRef:
-    name: kubernetes-provider
+    name: provider-config-dev

@@ -25,4 +25,4 @@ spec:
           config:
             node.store.allow_mmap: false
   providerConfigRef:
-    name: kubernetes-provider
+    name: provider-config-dev
