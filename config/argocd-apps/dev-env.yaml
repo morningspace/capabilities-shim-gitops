@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: dev-env-apps
+  name: dev-env
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "200"
@@ -12,7 +12,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/morningspace/capabilities-shim-gitops
-    path: environments/overlays/dev
+    path: environments/dev/env
     targetRevision: HEAD
   syncPolicy:
     automated:
