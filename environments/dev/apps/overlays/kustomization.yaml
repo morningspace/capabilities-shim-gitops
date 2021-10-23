@@ -1,0 +1,7 @@
+namespace: dev
+
+bases:
+  - ../base
+  
+patchesStrategicMerge:
+  - logging-claim.yaml

@@ -1,0 +1,10 @@
+apiVersion: capabilities.morningspace.io/v1alpha1
+kind: LoggingClaim
+metadata:
+  annotations:
+    capabilities.morningspace.io/provider-config: provider-config-dev
+  name: my-logging-stack
+spec:
+  parameters:
+    esVersion: 7.15.0
+    kibanaVersion: 7.15.0

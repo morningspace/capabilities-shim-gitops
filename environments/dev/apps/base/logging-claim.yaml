@@ -1,8 +1,6 @@
 apiVersion: capabilities.morningspace.io/v1alpha1
 kind: LoggingClaim
 metadata:
-  annotations:
-    capabilities.morningspace.io/provider-config: kubernetes-provider
   name: my-logging-stack
 spec:
   parameters:
