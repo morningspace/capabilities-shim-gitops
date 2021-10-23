@@ -7,4 +7,4 @@ spec:
     esVersion: 7.13.3
     kibanaVersion: 7.13.3
   providerConfigRef:
-    name: kubernetes-provider
+    name: provider-config-dev
