@@ -4,6 +4,8 @@ kind: Application
 metadata:
   name: olm-app
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "100"
 spec:
   destination:
     namespace: olm
