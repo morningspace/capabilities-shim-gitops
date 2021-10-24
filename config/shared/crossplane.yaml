@@ -23,6 +23,11 @@ spec:
     repoURL: https://charts.crossplane.io/stable
     chart: crossplane
     targetRevision: 1.4.1
+  ignoreDifferences:
+  - group: rbac.authorization.k8s.io
+    jsonPointers:
+    - /rules
+    kind: ClusterRole
   syncPolicy:
     automated:
       prune: true
