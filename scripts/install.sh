@@ -175,7 +175,7 @@ ARGOCD_CLI=${TOOLS_HOST_DIR}/argocd-${ARGOCD_CLI_VERSION}
 function install-argocd {
   info "Installing Argo CD ${ARGOCD_VERSION} ..."
 
-  ${KUBECTL} create namespace argocd
+  ${KUBECTL} get ns -o name | grep -q argocd || ${KUBECTL} create namespace argocd
   ${KUBECTL} apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/${ARGOCD_VERSION}/manifests/install.yaml
 
   wait-deployment argocd-server argocd
@@ -190,7 +190,7 @@ function install-argocd-cli {
   info "Installing Argo CD CLI ${ARGOCD_CLI_VERSION} ..."
 
   if [[ ! -f ${ARGOCD_CLI} ]]; then
-    curl -fsSLo ${ARGOCD_CLI} https://github.com/argoproj/argo-cd/releases/${ARGOCD_CLI_VERSION}/download/argocd-${HOSTOS}-${SAFEHOSTARCH} || exit -1
+    curl -fsSLo ${ARGOCD_CLI} https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_CLI_VERSION}/argocd-${HOSTOS}-${SAFEHOSTARCH} || exit -1
     chmod +x ${ARGOCD_CLI}
   else
     echo "Argo CD CLI ${ARGOCD_CLI_VERSION} detected."
