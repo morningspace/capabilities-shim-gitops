@@ -155,10 +155,10 @@ function pull-and-load-images {
   for i in ${REQUIRED_IMAGES[@]+"${REQUIRED_IMAGES[@]}"}; do
     echo "Pulling and loading image: ${i}"
     if echo "${i}" | grep ":master\s*$" >/dev/null || echo "${i}" | grep ":latest\s*$" >/dev/null || \
-      ! ${DOCKER} inspect --type=image "${i}" >/dev/null 2>&1; then
-      ${DOCKER} pull "${i}"
+      ! docker inspect --type=image "${i}" >/dev/null 2>&1; then
+      docker pull "${i}"
     fi
-    ${DOCKER} save > ${DEPLOY_LOCAL_WORKDIR}/tmp-image.tar "${i}"
+    docker save > ${DEPLOY_LOCAL_WORKDIR}/tmp-image.tar "${i}"
     ${KIND} load image-archive --name="${KIND_CLUSTER_NAME}" ${DEPLOY_LOCAL_WORKDIR}/tmp-image.tar
     rm -f ${DEPLOY_LOCAL_WORKDIR}/tmp-image.tar
   done
