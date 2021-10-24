@@ -10,8 +10,6 @@ ARGOCD_VERSION=${ARGOCD_VERSION:-v2.1.5}
 ARGOCD_CLI_VERSION=${ARGOCD_CLI_VERSION:-v2.1.5}
 # The version of kubeseal cli
 KUBESEAL_CLI_VERSION=${KUBESEAL_CLI_VERSION:-v0.16.0}
-# The required images to be pulled and loaded
-REQUIRED_IMAGES=("docker.io/library/redis:6.2.4-alpine")
 
 ####################
 # Settings
@@ -146,27 +144,6 @@ function kind-down {
 }
 
 ####################
-# Pull and load images
-####################
-
-function pull-and-load-images {
-  info "Pulling and loading images..."
-
-  for i in ${REQUIRED_IMAGES[@]+"${REQUIRED_IMAGES[@]}"}; do
-    echo "Pulling and loading image: ${i}"
-    if echo "${i}" | grep ":master\s*$" >/dev/null || echo "${i}" | grep ":latest\s*$" >/dev/null || \
-      ! docker inspect --type=image "${i}" >/dev/null 2>&1; then
-      docker pull "${i}"
-    fi
-    docker save > ${DEPLOY_LOCAL_WORKDIR}/tmp-image.tar "${i}"
-    ${KIND} load image-archive --name="${KIND_CLUSTER_NAME}" ${DEPLOY_LOCAL_WORKDIR}/tmp-image.tar
-    rm -f ${DEPLOY_LOCAL_WORKDIR}/tmp-image.tar
-  done
-
-  info "Pulling and loading images...OK"
-}
-
-####################
 # Install Argo CD
 ####################
 
@@ -179,6 +156,11 @@ function install-argocd {
   ${KUBECTL} apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/${ARGOCD_VERSION}/manifests/install.yaml
 
   wait-deployment argocd-server argocd
+
+  if [[ -n ${DOCKER_USERNAME} && -n ${DOCKER_PASSWORD} ]]; then
+    ${KUBECTL} create secret docker-registry docker-pull --docker-server=docker.io --docker-username=${DOCKER_USERNAME} --docker-password=${DOCKER_PASSWORD} -n argocd
+    ${KUBECTL} patch deploy/argocd-redis -n argocd -p '{"spec": {"template": {"spec": {"imagePullSecrets":[{"name":"docker-pull"}]}}}}'
+  fi
 
   ${KUBECTL} patch service/argocd-server -n argocd -p '{"spec": {"type": "NodePort", "ports": [{"name":"https", "nodePort": 30443, "port": 443}]}}'
   ARGOCD_PASSWORD="$(${KUBECTL} -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)"
@@ -233,7 +215,7 @@ It launched a kind cluster, installed following tools and applitions:
 - argocd cli ${ARGOCD_CLI_VERSION}
 - kubeseal cli ${KUBESEAL_CLI_VERSION}
 
-To access Argo CD UI, open https://$(hostname) in browser.
+To access Argo CD UI, open https://$(hostname):9443 in browser.
 - username: admin
 - password: ${ARGOCD_PASSWORD}
 
@@ -259,7 +241,6 @@ case $1 in
     install-kind
     install-kubectl
     kind-up
-    pull-and-load-images
     install-argocd
     install-argocd-cli
     install-kubeseal-cli
