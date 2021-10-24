@@ -1,0 +1,8 @@
+---
+metadata:
+  name: my-logging-stack
+  namespace: default
+spec:
+  parameters:
+    esVersion: 7.13.3
+    kibanaVersion: 7.13.3

@@ -1,0 +1,35 @@
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  namespace: operators
+  name: {{.Values.metadata.name}}
+spec:
+  channel: stable
+  name: elastic-cloud-eck
+  source: operatorhubio-catalog
+  sourceNamespace: olm
+---
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: {{.Values.metadata.name}}
+  namespace: {{.Values.metadata.namespace}}
+spec:
+  version: {{.Values.spec.parameters.esVersion}}
+  nodeSets:
+  - name: default
+    count: 1
+    config:
+      node.store.allow_mmap: false
+---
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: {{.Values.metadata.name}}
+  namespace: {{.Values.metadata.namespace}}
+spec:
+  version: {{.Values.spec.parameters.kibanaVersion}}
+  elasticsearchRef:
+    name: {{.Values.metadata.name}}
+  count: 1
