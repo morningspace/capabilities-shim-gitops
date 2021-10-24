@@ -1,5 +1,4 @@
 resources:
-  - capabilities-configuration.yaml
   - cluster-config.json
   - provider-config.yaml
   - namespace.yaml
