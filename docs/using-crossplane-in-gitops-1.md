@@ -69,7 +69,7 @@ spec:
 
 For provider installing, it can also be handled as such if the provider has been packaged and published so that it can be described using Crossplane manifest.
 
-Here I'm using [capabilities-shim](https://github.com/morningspace/capabilities-shim) as a demo project to demonstrate the Crossplane use in GitOps. There is a Crossplane configuration package which includes some pre-defined Composition and CompositeResourceDefinition manifests. It also depends on an enhanced version of [provider-kubernetes](https://github.com/morningspace/provider-kubernetes). In order to install both the configuration package and the provider, just need to check below `Configuration` resource in git:
+Here I'm using [capabilities-shim](https://github.com/morningspace/capabilities-shim) as a demo project to demonstrate the Crossplane use in GitOps. There is a Crossplane configuration package which includes some pre-defined Composition and CompositeResourceDefinition manifests. It also depends on [an enhanced version](https://github.com/morningspace/provider-kubernetes) of [provider-kubernetes](https://github.com/crossplane-contrib/provider-kubernetes). In order to install both the configuration package and the provider, just need to check a `Configuration` resource in git as below:
 
 ```yaml
 apiVersion: pkg.crossplane.io/v1
@@ -85,7 +85,7 @@ spec:
   skipDependencyResolution: false
 ```
 
-Crossplane will then extract the package, install all resources included, along with the dependent provider automatically.
+Crossplane will then extract the package, install all resources included, along with the dependent provider all automatically.
 
 ### Setup ProviderConfig
 
