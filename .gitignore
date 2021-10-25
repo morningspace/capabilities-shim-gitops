@@ -1,0 +1,3 @@
+*/.cache/
+*/.work/
+environments/*/env/cluster-config.yaml
