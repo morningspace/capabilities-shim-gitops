@@ -149,18 +149,6 @@ function install-argocd {
 
   wait-deployment argocd-server argocd
 
-  if [[ $1 == "--gen-pull-secret" ]]; then
-    echo -n "Enter docker username: "
-    read DOCKER_USERNAME
-
-    echo -n "Enter docker password: "
-    read -s DOCKER_PASSWORD
-    echo
-
-    ${KUBECTL} create secret docker-registry docker-pull --docker-server=docker.io --docker-username=${DOCKER_USERNAME} --docker-password=${DOCKER_PASSWORD} -n argocd
-    ${KUBECTL} patch deploy/argocd-redis -n argocd -p '{"spec": {"template": {"spec": {"imagePullSecrets":[{"name":"docker-pull"}]}}}}'
-  fi
-
   ${KUBECTL} patch service/argocd-server -n argocd -p '{"spec": {"type": "NodePort", "ports": [{"name":"https", "nodePort": 30443, "port": 443}]}}'
   ARGOCD_PASSWORD="$(${KUBECTL} -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)"
 
@@ -244,6 +232,7 @@ function gen-cluster-config {
   ${KUBESEAL_CLI} -n ${ns} --controller-namespace argocd < ${CLUSTER_CONFIG_PATH}/cluster-config.yaml > ${CLUSTER_CONFIG_PATH}/cluster-config.json.tmp
   if [[ $? == 0 ]]; then
     mv ${CLUSTER_CONFIG_PATH}/cluster-config.json{.tmp,}
+    echo "The file ${CLUSTER_CONFIG_PATH}/cluster-config.json is updated, please check in to git."
   else
     rm ${CLUSTER_CONFIG_PATH}/cluster-config.json.tmp
     exit 1
@@ -254,23 +243,59 @@ function gen-cluster-config {
 }
 
 ####################
+# Patch image pull secret
+####################
+
+function patch-pull-secret {
+  namespace='argocd'
+  positional=('deploy/argocd-redis')
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -n|--namespace)
+      namespace="$2"; shift; shift ;;
+    *)
+      positional+=("$1"); shift ;;
+    esac
+  done
+
+  echo -n "Enter docker username: "
+  read DOCKER_USERNAME
+
+  echo -n "Enter docker password: "
+  read -s DOCKER_PASSWORD
+  echo
+
+  ${KUBECTL} create secret docker-registry docker-pull --docker-server=docker.io --docker-username=${DOCKER_USERNAME} --docker-password=${DOCKER_PASSWORD} -n $namespace
+  ${KUBECTL} patch ${positional[@]} -n $namespace -p '{"spec": {"template": {"spec": {"imagePullSecrets":[{"name":"docker-pull"}]}}}}'
+}
+
+####################
 # Print help
 ####################
 
 function print-help {
   cat << EOF
-Usage: $0 [up|down|cluster-config] [flags]
+Usage: $0 up
+       $0 down
+       $0 cluster-config <namespace>
+       $0 patch-pull-secret <resource> -n <namespace>
 
 Examples:
-  # Bring up the GitOps demo environment on your machine
+  # Bring up the demo environment on your machine
   $0 up
 
-  # Take down the GitOps demo environment on your machine
+  # Take down the demo environment on your machine
   $0 down
 
   # Generate and update the cluster-config secret encrypted by kubeseal for the demo environment
-  # For <your_namespace>, default to dev namespace if omitted
-  $0 cluster-config <your_namespace>
+  # <namespace> default to dev if omitted
+  $0 cluster-config
+
+  # Patch image pull secret for specific deployment from docker hub
+  # <resource> default to deployment/argocd-redis if omitted
+  # <namespace> default to argocd if omitted
+  $0 patch-pull-secret
 EOF
 }
 
@@ -287,7 +312,7 @@ case $1 in
     install-kind
     install-kubectl
     kind-up
-    install-argocd ${@:2}
+    install-argocd
     install-argocd-cli
     install-kubeseal-cli
     print-summary
@@ -295,6 +320,9 @@ case $1 in
   "cluster-config")
     install-kubeseal-cli
     gen-cluster-config ${@:2}
+    ;;
+  "patch-pull-secret")
+    patch-pull-secret ${@:2}
     ;;
   *)
     print-help
