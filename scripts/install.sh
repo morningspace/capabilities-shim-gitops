@@ -207,7 +207,7 @@ function install-kubeseal-cli {
 function print-summary {
   cat << EOF
 
-👏 Congratulations! The GitOps Demo Environment is available!
+👏 Congratulations! The GitOps demo environment is available!
 It launched a kind cluster, installed following tools and applitions:
 - kind ${KIND_VERSION}
 - kubectl ${KUBECTL_VERSION}
@@ -229,15 +229,54 @@ EOF
 }
 
 ####################
+# Generate cluster info
+####################
+
+function gen-cluster-config {
+  info "Generating cluster information ..."
+
+  local ns=${1:-dev}
+
+  CLUSTER_CONFIG_PATH=$(cd -P ${ROOT_DIR}/../environments/${ns}/env >/dev/null 2>&1 && pwd)
+
+  KUBESVC_IP=$(${KUBECTL} get service kubernetes -o jsonpath='{.spec.clusterIP}')
+  CLUSTER_CONFIG=$(${KIND} get kubeconfig --name ${KIND_CLUSTER_NAME} | sed -e "s|server:\s*.*$|server: https://${KUBESVC_IP}|g")
+  ${KUBECTL} create secret generic cluster-config --from-literal=kubeconfig="${CLUSTER_CONFIG}" --dry-run -o yaml > ${CLUSTER_CONFIG_PATH}/cluster-config.yaml
+  ${KUBESEAL_CLI} -n ${ns} --controller-namespace argocd < ${CLUSTER_CONFIG_PATH}/cluster-config.yaml > ${CLUSTER_CONFIG_PATH}/cluster-config.json
+  # rm -f ${CLUSTER_CONFIG_PATH}/cluster-config.yaml
+
+  info "Generating cluster information ... OK"
+}
+
+####################
+# Print help
+####################
+
+function print-help {
+  cat << EOF
+Usage: $0 [up|down|cluster-config] [flags]
+
+Examples:
+  # Bring up the GitOps demo environment on your machine
+  $0 up
+  # Take down the GitOps demo environment on your machine
+  $0 down
+  # Generate and update the cluster-config secret encrypted by kubeseal for the demo environment
+  # For <your_namespace>, default to dev namespace if omitted
+  $0 cluster-config <your_namespace>
+EOF
+}
+
+####################
 # Main entrance
 ####################
 
 case $1 in
-  "clean")
+  "down")
     install-kind
     kind-down
     ;;
-  *)
+  "up")
     install-kind
     install-kubectl
     kind-up
@@ -245,5 +284,11 @@ case $1 in
     install-argocd-cli
     install-kubeseal-cli
     print-summary
+    ;;
+  "cluster-config")
+    install-kubeseal-cli
+    gen-cluster-config
+    ;;
+  *)
     ;;
 esac
