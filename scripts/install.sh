@@ -1,16 +1,5 @@
 #!/bin/bash
 
-# The version of kind
-KIND_VERSION=${KIND_VERSION:-v0.11.1}
-# The version of kubectl
-KUBECTL_VERSION=${KUBECTL_VERSION:-v1.17.11}
-# The version of argocd
-ARGOCD_VERSION=${ARGOCD_VERSION:-v2.1.5}
-# The version of argocd cli
-ARGOCD_CLI_VERSION=${ARGOCD_CLI_VERSION:-v2.1.5}
-# The version of kubeseal cli
-KUBESEAL_CLI_VERSION=${KUBESEAL_CLI_VERSION:-v0.16.0}
-
 ####################
 # Settings
 ####################
@@ -35,6 +24,9 @@ TOOLS_HOST_DIR=${ROOT_DIR}/.cache/tools/${HOST_PLATFORM}
 
 mkdir -p ${DEPLOY_LOCAL_WORKDIR}
 mkdir -p ${TOOLS_HOST_DIR}
+
+# Custom settings
+. ${ROOT_DIR}/config.sh
 
 ####################
 # Utility functions
@@ -157,7 +149,14 @@ function install-argocd {
 
   wait-deployment argocd-server argocd
 
-  if [[ -n ${DOCKER_USERNAME} && -n ${DOCKER_PASSWORD} ]]; then
+  if [[ $1 == "--gen-pull-secret" ]]; then
+    echo -n "Enter docker username: "
+    read DOCKER_USERNAME
+
+    echo -n "Enter docker password: "
+    read -s DOCKER_PASSWORD
+    echo
+
     ${KUBECTL} create secret docker-registry docker-pull --docker-server=docker.io --docker-username=${DOCKER_USERNAME} --docker-password=${DOCKER_PASSWORD} -n argocd
     ${KUBECTL} patch deploy/argocd-redis -n argocd -p '{"spec": {"template": {"spec": {"imagePullSecrets":[{"name":"docker-pull"}]}}}}'
   fi
@@ -242,7 +241,13 @@ function gen-cluster-config {
   KUBESVC_IP=$(${KUBECTL} get service kubernetes -o jsonpath='{.spec.clusterIP}')
   CLUSTER_CONFIG=$(${KIND} get kubeconfig --name ${KIND_CLUSTER_NAME} | sed -e "s|server:\s*.*$|server: https://${KUBESVC_IP}|g")
   ${KUBECTL} create secret generic cluster-config --from-literal=kubeconfig="${CLUSTER_CONFIG}" --dry-run -o yaml > ${CLUSTER_CONFIG_PATH}/cluster-config.yaml
-  ${KUBESEAL_CLI} -n ${ns} --controller-namespace argocd < ${CLUSTER_CONFIG_PATH}/cluster-config.yaml > ${CLUSTER_CONFIG_PATH}/cluster-config.json
+  ${KUBESEAL_CLI} -n ${ns} --controller-namespace argocd < ${CLUSTER_CONFIG_PATH}/cluster-config.yaml > ${CLUSTER_CONFIG_PATH}/cluster-config.json.tmp
+  if [[ $? == 0 ]]; then
+    mv ${CLUSTER_CONFIG_PATH}/cluster-config.json{.tmp,}
+  else
+    rm ${CLUSTER_CONFIG_PATH}/cluster-config.json.tmp
+    exit 1
+  fi
   # rm -f ${CLUSTER_CONFIG_PATH}/cluster-config.yaml
 
   info "Generating cluster information ... OK"
@@ -259,8 +264,10 @@ Usage: $0 [up|down|cluster-config] [flags]
 Examples:
   # Bring up the GitOps demo environment on your machine
   $0 up
+
   # Take down the GitOps demo environment on your machine
   $0 down
+
   # Generate and update the cluster-config secret encrypted by kubeseal for the demo environment
   # For <your_namespace>, default to dev namespace if omitted
   $0 cluster-config <your_namespace>
@@ -280,15 +287,16 @@ case $1 in
     install-kind
     install-kubectl
     kind-up
-    install-argocd
+    install-argocd ${@:2}
     install-argocd-cli
     install-kubeseal-cli
     print-summary
     ;;
   "cluster-config")
     install-kubeseal-cli
-    gen-cluster-config
+    gen-cluster-config ${@:2}
     ;;
   *)
+    print-help
     ;;
 esac
