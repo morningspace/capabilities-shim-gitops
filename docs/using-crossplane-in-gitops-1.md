@@ -23,7 +23,7 @@ There are a few reasons that I can see how Crossplane can fit into GitOps realm 
 
 * Since Crossplane is designed to assemble infrastructure from multiple vendors, it makes it a lot easier to practice GitOps for application deployment across different vendors, typically public cloud vendors such as Amazon AWS, Google Cloud, Azure, IBM Cloud, etc. in a consistent manner.
 
-* With the help of its powerful composition engine, Crossplane allows people to compose different modules from infrastructure, to service, to application as needed in a declarative way, where we can check these declarative descriptions into git for GitOps tools to pick up easily.
+* With the help of its powerful composition engine, Crossplane allows people to compose different modules from infrastructure, service, to application as needed in a declarative way, where we can check these declarative descriptions into git for GitOps tools to pick up easily.
 
 * Crossplane allows people to extend its capabilities using Provider that can interact with different backends. There is a large amount of providers available in community and it is still actively evolving. By using variant providers, we can turn many different backends into something that are Kubernetes friendly, so that the desired state can be described using Kubernetes custom resource, then check into git and driven by GitOps tools.
 
