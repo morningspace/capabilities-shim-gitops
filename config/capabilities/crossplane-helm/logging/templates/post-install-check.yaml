@@ -23,8 +23,8 @@ spec:
               installing=0
 
               while [ ${current_seconds} -lt ${limit_seconds} ]; do
-                if [ $(kubectl get csv -n "{{.Values.metadata.namespace}}" -o name | grep -c clusterserviceversion) -eq 0 ||
-                     $(kubectl get csv -n "{{.Values.metadata.namespace}}" --no-headers | grep -vc Succeeded) -gt 0 ]; then
+                if [ $(kubectl get csv -n "{{.Values.metadata.namespace}}" -o name | grep -c clusterserviceversion) -eq 0 ] || \
+                   [ $(kubectl get csv -n "{{.Values.metadata.namespace}}" --no-headers | grep -vc Succeeded) -gt 0 ]; then
                   installing=1
                   echo "INFO: ClusterServiceVersion resources still installing."
                   sleep 60
