@@ -2,19 +2,16 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: check-csv
+  name: post-install-check
   annotations:
     argocd.argoproj.io/hook: PostSync
-  namespace: crossplane-system
+  namespace: argocd
 spec:
   template:
     spec:
       containers:
         - name: check-csv
           image: quay.io/bitnami/kubectl:latest
-          env:
-            - name: TARGET_NAMESPACE
-              value: "operators"
           command:
             - /bin/sh
             - -c
@@ -26,7 +23,7 @@ spec:
               csv_installing=0
 
               while [ ${current_seconds} -lt ${limit_seconds} ]; do
-                if [ kubectl get csv -n "${TARGET_NAMESPACE}" --no-headers | grep -vc Succeeded -gt 0 ]; then
+                if [ $(kubectl get csv -n " {{.Values.metadata.namespace}}" --no-headers | grep -vc Succeeded) -gt 0 ]; then
                   csv_installing=1
                   echo "INFO: CSVs still installing."
                   sleep 60
@@ -37,8 +34,6 @@ spec:
                 current_seconds=$(( $(date +%s) ))
               done
 
-              kubectl get csv -n "${TARGET_NAMESPACE}"
-
               if [ ${csv_installing} -eq 0 ]; then
                 echo "INFO: All CSVs are ready."
               else
@@ -46,5 +41,5 @@ spec:
                 exit 1
               fi
       restartPolicy: Never
-      serviceAccountName: crossplane
+      serviceAccountName: argocd-application-controller
   backoffLimit: 1
