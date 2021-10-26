@@ -19,7 +19,7 @@ spec:
               set -x
 
               current_seconds=0
-              limit_seconds=$(( $SECONDS + 600 ))
+              limit_seconds=$(( $(date +%s) + 600 ))
               installing=0
 
               while [ ${current_seconds} -lt ${limit_seconds} ]; do
@@ -27,12 +27,12 @@ spec:
                    [ $(kubectl get csv -n "{{.Values.metadata.namespace}}" --no-headers | grep -vc Succeeded) -gt 0 ]; then
                   installing=1
                   echo "INFO: ClusterServiceVersion resources still installing."
-                  sleep 60
+                  sleep 1
                 else
                   installing=0
                   break
                 fi
-                current_seconds=$SECONDS
+                current_seconds=$(( $(date +%s) ))
               done
 
               if [ ${installing} -eq 0 ]; then
