@@ -1,7 +1,7 @@
 namespace: dev
 
 bases:
-  - ../base
+  - ../../base/apps
   
 patchesStrategicMerge:
   - logging-claim.yaml
