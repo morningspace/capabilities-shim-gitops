@@ -150,7 +150,6 @@ function install-argocd {
   wait-deployment argocd-server argocd
 
   ${KUBECTL} patch service/argocd-server -n argocd -p '{"spec": {"type": "NodePort", "ports": [{"name":"https", "nodePort": 30443, "port": 443}]}}'
-  ARGOCD_PASSWORD="$(${KUBECTL} -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)"
 
   info "Installing Argo CD ${ARGOCD_VERSION} ... OK"
 }
@@ -202,9 +201,7 @@ It launched a kind cluster, installed following tools and applitions:
 - argocd cli ${ARGOCD_CLI_VERSION}
 - kubeseal cli ${KUBESEAL_CLI_VERSION}
 
-To access Argo CD UI, open https://$(hostname):9443 in browser.
-- username: admin
-- password: ${ARGOCD_PASSWORD}
+$(print-console)
 
 For tools you want to run anywhere, create links in a directory defined in your PATH, e.g:
 ln -s -f ${KUBECTL} /usr/local/bin/kubectl
@@ -212,6 +209,16 @@ ln -s -f ${KIND} /usr/local/bin/kind
 ln -s -f ${ARGOCD_CLI} /usr/local/bin/argocd
 ln -s -f ${KUBESEAL_CLI} /usr/local/bin/kubeseal
 
+EOF
+}
+
+function print-console {
+  ARGOCD_PASSWORD="$(${KUBECTL} -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)"
+
+  cat << EOF
+To access Argo CD UI, open https://$(hostname):9443 in browser.
+- username: admin
+- password: ${ARGOCD_PASSWORD}
 EOF
 }
 
@@ -280,6 +287,7 @@ Usage: $0 up
        $0 down
        $0 cluster-config <namespace>
        $0 patch-pull-secret <resource> -n <namespace>
+       $0 console
 
 Examples:
   # Bring up the demo environment on your machine
@@ -296,6 +304,9 @@ Examples:
   # <resource> default to deployment/argocd-redis if omitted
   # <namespace> default to argocd if omitted
   $0 patch-pull-secret
+
+  # Print Argo CD UI Console access information
+  $0 console
 EOF
 }
 
@@ -323,6 +334,9 @@ case $1 in
     ;;
   "patch-pull-secret")
     patch-pull-secret ${@:2}
+    ;;
+  "console")
+    print-console
     ;;
   *)
     print-help
