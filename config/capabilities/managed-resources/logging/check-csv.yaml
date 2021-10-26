@@ -19,7 +19,6 @@ spec:
             - /bin/sh
             - -c
             - |
-              set -eo pipefail
               set -x
 
               current_seconds=0
