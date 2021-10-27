@@ -4,6 +4,8 @@ kind: Kibana
 metadata:
   name: {{.Values.metadata.name}}
   namespace: {{.Values.metadata.namespace}}
+  annotations:
+    argocd.argoproj.io/sync-wave: "200"
 spec:
   version: {{.Values.spec.parameters.kibanaVersion}}
   elasticsearchRef:
