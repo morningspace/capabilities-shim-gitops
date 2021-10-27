@@ -38,7 +38,7 @@ data:
       if obj.status.health == "green" and obj.status.phase == "Ready" then
         hs.status = "Healthy"
       end
-      hs.message = string.format("health = %s, phase = %s", obj.status.health, obj.status.phase)
+      hs.message = "health = " .. obj.status.health .. " phase = " .. obj.status.phase
     end
     return hs
   resource.customizations.health.elasticsearch.k8s.elastic.co_Kibana: |
@@ -49,6 +49,6 @@ data:
       if obj.status.health == "green" and obj.status.associationStatus == "Established" then
         hs.status = "Healthy"
       end
-      hs.message = string.format("health = %s, associationStatus = %s", obj.status.health, obj.status.associationStatus)
+      hs.message = "health = " .. obj.status.health .. " associationStatus = " .. obj.status.associationStatus
     end
     return hs
