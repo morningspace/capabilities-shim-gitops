@@ -45,4 +45,8 @@ data:
     hs = {}
     hs.status = "Progressing"
     hs.message = ""
+    if obj.status ~= nil and obj.status.atProvider ~= nil then
+      hs.status = "Healthy"
+      hs.message = kind
+    end
     return hs
