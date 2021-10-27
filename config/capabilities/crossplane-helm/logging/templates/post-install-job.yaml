@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: post-install-check
+  name: post-install-job
   annotations:
     argocd.argoproj.io/hook: PostSync
   namespace: argocd
