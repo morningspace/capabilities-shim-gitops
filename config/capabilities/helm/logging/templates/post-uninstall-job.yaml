@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{ .Release.Name }}"-post-uninstall-job
+  name: {{ .Release.Name }}-post-uninstall-job
   namespace: argocd
   labels:
     app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
