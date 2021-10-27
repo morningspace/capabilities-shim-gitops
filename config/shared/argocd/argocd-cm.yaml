@@ -53,7 +53,7 @@ data:
   resource.customizations.health.kubernetes.crossplane.io_Object: |
     hs = {}
     hs.status = "Progressing"
-    hs.message = "..."
+    hs.message = ""
     if obj.status ~= nil and obj.status.atProvider ~= nil then
       kind = obj.spec.forProvider.manifest.kind
       res = obj.status.atProvider.manifest
