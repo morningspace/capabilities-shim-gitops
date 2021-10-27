@@ -8,17 +8,6 @@ metadata:
     app.kubernetes.io/name: argocd-cm
     app.kubernetes.io/part-of: argocd
 data:
-  resource.customizations.health.operators.coreos.com_Subscription: |
-    hs = {}
-    hs.status = "Progressing"
-    hs.message = ""
-    if obj.status ~= nil then
-      if obj.status.currentCSV ~= nil then
-        hs.status = "Healthy"
-        hs.message = obj.status.currentCSV
-      end
-    end
-    return hs
   resource.customizations.health.operators.coreos.com_ClusterServiceVersion: |
     hs = {}
     hs.status = "Progressing"
@@ -41,7 +30,7 @@ data:
       hs.message = "health = " .. obj.status.health .. " phase = " .. obj.status.phase
     end
     return hs
-  resource.customizations.health.elasticsearch.k8s.elastic.co_Kibana: |
+  resource.customizations.health.kibana.k8s.elastic.co_Kibana: |
     hs = {}
     hs.status = "Progressing"
     hs.message = ""
