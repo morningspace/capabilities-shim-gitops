@@ -1,52 +1,39 @@
 # Ensuring all namespace and cluster scoped resources are cleaned up
-apiVersion: batch/v1
-kind: Job
+apiVersion: v1
+kind: Pod
 metadata:
-  name: {{ .Release.Name }}-post-uninstall-job
+  name: hook-postinstall
   namespace: argocd
-  labels:
-    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
-    app.kubernetes.io/instance: {{ .Release.Name | quote }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion }}
-    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
   annotations:
-    # hooks are defined here
-    "helm.sh/hook": post-delete
+    "helm.sh/hook": "post-delete"
 spec:
-  template:
-    metadata:
-      name: "{{ .Release.Name }}"
-      labels:
-        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
-        app.kubernetes.io/instance: {{ .Release.Name | quote }}
-        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    spec:
-      containers:
-        - name: clean-resources
-          image: quay.io/bitnami/kubectl:latest
-          command:
-            - /bin/bash
-            - -c
-            - |
-              set -x
+  containers:
+  - name: hook2-container
+    image: quay.io/bitnami/kubectl:latest
+    imagePullPolicy: IfNotPresent
+    command:
+      - /bin/bash
+      - -c
+      - |
+        set -x
 
-              result=0
+        result=0
 
-              # clean csv
-              csvs=($(kubectl get csv -n operators -o name))
-              if [[ -n ${csvs[@]} ]]; then
-                kubectl delete ${csvs[@]} -n operators
-                (( result+=$? ))
-              fi
+        # clean csv
+        csvs=($(kubectl get csv -n operators -o name))
+        if [[ -n ${csvs[@]} ]]; then
+          kubectl delete ${csvs[@]} -n operators
+          (( result+=$? ))
+        fi
 
-              # clean crd
-              crds=($(kubectl get crd -o name | grep elastic.co))
-              if [[ -n ${crds[@]} ]]; then
-                kubectl delete ${crds[@]}
-                (( result+=$? ))
-              fi
+        # clean crd
+        crds=($(kubectl get crd -o name | grep elastic.co))
+        if [[ -n ${crds[@]} ]]; then
+          kubectl delete ${crds[@]}
+          (( result+=$? ))
+        fi
 
-              exit "${result}"
-      restartPolicy: Never
-      serviceAccountName: argocd-application-controller
-  backoffLimit: 1
+        exit "${result}"
+  restartPolicy: Never
+  serviceAccountName: argocd-application-controller
+  terminationGracePeriodSeconds: 0
