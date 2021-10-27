@@ -2,12 +2,23 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: post-install-job
+  name: {{ .Release.Name }}-post-install-job
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    app.kubernetes.io/version: "{{ .Chart.AppVersion }}"
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
   annotations:
     argocd.argoproj.io/hook: PostSync
-  namespace: argocd
 spec:
   template:
+    metadata:
+      name: {{ .Release.Name }}-post-install-job
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     spec:
       containers:
         - name: check-csv
