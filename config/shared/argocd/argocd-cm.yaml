@@ -1,0 +1,54 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  resource.customizations.health.operators.coreos.com_Subscription: |
+    hs = {}
+    hs.status = "Progressing"
+    hs.message = ""
+    if obj.status ~= nil then
+      if obj.status.currentCSV ~= nil then
+        hs.status = "Healthy"
+        hs.message = obj.status.currentCSV
+      end
+    end
+    return hs
+  resource.customizations.health.operators.coreos.com_ClusterServiceVersion: |
+    hs = {}
+    hs.status = "Progressing"
+    hs.message = ""
+    if obj.status ~= nil then
+      if obj.status.phase == "Succeeded" then
+        hs.status = "Healthy"
+      end
+      hs.message = obj.status.message
+    end
+    return hs
+  resource.customizations.health.elasticsearch.k8s.elastic.co_Elasticsearch: |
+    hs = {}
+    hs.status = "Progressing"
+    hs.message = ""
+    if obj.status ~= nil then
+      if obj.status.health == "green" and obj.status.phase == "Ready" then
+        hs.status = "Healthy"
+      end
+      hs.message = string.format("health = %s, phase = %s", obj.status.health, obj.status.phase)
+    end
+    return hs
+  resource.customizations.health.elasticsearch.k8s.elastic.co_Kibana: |
+    hs = {}
+    hs.status = "Progressing"
+    hs.message = ""
+    if obj.status ~= nil then
+      if obj.status.health == "green" and obj.status.associationStatus == "Established" then
+        hs.status = "Healthy"
+      end
+      hs.message = string.format("health = %s, associationStatus = %s", obj.status.health, obj.status.associationStatus)
+    end
+    return hs
