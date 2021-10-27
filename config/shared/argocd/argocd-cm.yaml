@@ -48,26 +48,30 @@ data:
     if obj.status ~= nil and obj.status.atProvider ~= nil then
       kind = obj.spec.forProvider.manifest.kind
       res = obj.status.atProvider.manifest
-      if kind == "ClusterServiceVersion" then
-        if res.status ~= nil then
-          if res.status.phase == "Succeeded" then
-            hs.status = "Healthy"
+      if res ~= nil then
+        if kind == "Subscription" then
+          hs.status = "Healthy"
+        elseif kind == "ClusterServiceVersion" then
+          if res.status ~= nil then
+            if res.status.phase == "Succeeded" then
+              hs.status = "Healthy"
+            end
+            hs.message = res.status.message
           end
-          hs.message = res.status.message
-        end
-      elseif kind == "Elasticsearch" then
-        if res.status ~= nil then
-          if res.status.health == "green" and res.status.phase == "Ready" then
-            hs.status = "Healthy"
+        elseif kind == "Elasticsearch" then
+          if res.status ~= nil then
+            if res.status.health == "green" and res.status.phase == "Ready" then
+              hs.status = "Healthy"
+            end
+            hs.message = "health = " .. res.status.health .. " phase = " .. res.status.phase
           end
-          hs.message = "health = " .. res.status.health .. " phase = " .. res.status.phase
-        end
-      elseif kind == "Kibana" then
-        if res.status ~= nil then
-          if res.status.health == "green" and res.status.associationStatus == "Established" then
-            hs.status = "Healthy"
+        elseif kind == "Kibana" then
+          if res.status ~= nil then
+            if res.status.health == "green" and res.status.associationStatus == "Established" then
+              hs.status = "Healthy"
+            end
+            hs.message = "health = " .. res.status.health .. " associationStatus = " .. res.status.associationStatus
           end
-          hs.message = "health = " .. res.status.health .. " associationStatus = " .. res.status.associationStatus
         end
       end
     end
