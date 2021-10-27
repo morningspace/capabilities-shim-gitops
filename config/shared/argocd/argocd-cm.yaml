@@ -46,8 +46,8 @@ data:
     hs.status = "Progressing"
     hs.message = ""
     if obj.status ~= nil and obj.status.atProvider ~= nil then
-      kind = obj.spec.forProvider.manifest.kind
-      res = obj.status.atProvider.manifest
+      # kind = obj.spec.forProvider.manifest.kind
+      # res = obj.status.atProvider.manifest
       hs.status = "Healthy"
       hs.message = kind
     end
