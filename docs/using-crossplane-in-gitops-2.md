@@ -2,15 +2,17 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [Using Crossplane in GitOps](#using-crossplane-in-gitops)
+- [Using Crossplane in GitOps, Part II](#using-crossplane-in-gitops-part-ii)
   - [Store Manifests in Git Repository](#store-manifests-in-git-repository)
     - [Managed Resources](#managed-resources)
       - [Using Kustomize](#using-kustomize)
     - [Managed Resources As Template](#managed-resources-as-template)
     - [Composition and CompositeResourceDefinition](#composition-and-compositeresourcedefinition)
+      - [When to Check Composition and CompositeResourceDefinition in Git](#when-to-check-composition-and-compositeresourcedefinition-in-git)
+      - [Using Kustomize](#using-kustomize-1)
   - [Crossplane vs. Helm](#crossplane-vs-helm)
     - [Crossplane Composition vs. Helm Templates](#crossplane-composition-vs-helm-templates)
-    - [XRD, XRC, XR vs. values.yaml](#xrd-xrc-xr-vs-valuesyaml)
+    - [CompositeResource(Claim), CompositeResourceDefinition vs. values.yaml](#compositeresourceclaim-compositeresourcedefinition-vs-valuesyaml)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
