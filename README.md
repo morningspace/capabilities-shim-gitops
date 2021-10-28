@@ -1,14 +1,16 @@
 # capabilities-shim-gitops
 
-This repository is used to demonstrate how to effectively adopt Crossplane in GitOps by using a sample application. The sample application is based on another demo project [capabilities-shim](https://github.com/morningspace/capabilities-shim) to prove the technical feasibility of composing variant existing software capabilities using Crossplane to come up with solution that meets users' specific needs.
+This repository is used to demonstrate how to effectively adopt Crossplane in GitOps by using a sample application. The sample application is based on another demo project [capabilities-shim](https://github.com/morningspace/capabilities-shim) that I created to prove the technical feasibility of composing variant existing software capabilities using Crossplane to come up with solution that meets user specific needs.
 
 ## What it covers?
 
 The repository includes:
 
-* A bunch of well-organized YAML manifests that represents variant software modules that can be synchronized and deployed by Argo CD to target cluster. This can be taken as a reference for people to evaluate what a GitOps repository can look like when using Crossplane.
-* Documents in `docs` folder that discuss best practices, common considerations, and lessons learned that you might experience as well when use Crossplane in GitOps.
-* A shell script that helps you launch a GitOps demo environment in minutes including a KIND cluster with Argo CD installed. After the environment is launched, you can explore the repository, follow the documents, and do experiment against it to get hands-on experience of using Crossplane in GitOps.
+* A bunch of well-organized YAML manifests: Represents variant software modules that can be synchronized and deployed by Argo CD to target cluster. This can be taken as a reference for people to evaluate what a GitOps repository can look like when using Crossplane.
+* Documents in `docs` folder: Discuss best practices, common considerations, and lessons learned that you might experience as well when use Crossplane in GitOps.
+* A shell script: Help you launch a GitOps demo environment in minutes including a KIND cluster with Argo CD installed.
+
+Follow below instructions to luanch the demo environment. After it is up and running, you can explore the repository, follow the documents in `docs` folder, and experiment to get hands-on experience of using Crossplane in GitOps.
 
 ## Play with the demo environment
 
@@ -53,7 +55,6 @@ Login to Argo CD from UI, then create an Argo Application using the following va
 | ---------------- | -------------------------------------------------------- |
 | Application Name | shared-apps                                              |
 | Path             | config/shared                                            |
-| Namespace        | default                                                  |
 | Project          | default                                                  |
 | Sync policy      | Automatic                                                |
 | Self Heal        | true                                                     |
@@ -77,6 +78,8 @@ After everything is up, run below command to generate and update the `cluster-co
 
 ```shell
 ./scripts/install.sh cluster-config
+git add environments/dev/env/cluster-config.json
+git commit -m "Update cluster-config.json"
 git push
 ```
 
@@ -84,9 +87,8 @@ Then create an Argo Application that represents the environment from UI using th
 
 | Field            | Value                                                    |
 | ---------------- | -------------------------------------------------------- |
-| Application Name | dev-env.                                                 |
+| Application Name | dev-env                                                  |
 | Path             | environments/dev/env                                     |
-| Namespace        | default                                                  |
 | Project          | default                                                  |
 | Sync policy      | Automatic                                                |
 | Self Heal        | true                                                     |
@@ -94,6 +96,8 @@ Then create an Argo Application that represents the environment from UI using th
 | Revision         | HEAD                                                     |
 | Cluster URL      | https://kubernetes.default.svc                           |
 
+
+Congratulations! Now you can explore the repository, follow the documents in `docs` folder, and experiment with this environment to get hands-on experience of using Crossplane in GitOps.
 
 ### Troubleshooting
 
