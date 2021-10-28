@@ -28,19 +28,48 @@ In Crossplane, managed resource is Kubernetes custom resource defined and handle
 
 ![](images/managed-resource.png)
 
-This approach is very straightforward, but may not scale very much because it does not allow you to customize the configuration.
+For example, check below managed resource in git, you will be able to deploy an Elasticsearch instance with the help of provider kubernetes:
 
-For example, if you want to deploy the application to another namespace instead of the default one. You need a way to override the default configuration.
+```yaml
+---
+apiVersion: kubernetes.crossplane.io/v1alpha1
+kind: Object
+metadata:
+  name: elasticsearch-my-logging-stack
+spec:
+  references:
+  - fromObject:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      name: csv-my-logging-stack
+      fieldPath: status.atProvider.manifest.status.phase
+  forProvider:
+    manifest:
+      apiVersion: elasticsearch.k8s.elastic.co/v1
+      kind: Elasticsearch
+      metadata:
+        name: my-logging-stack
+        namespace: default
+      spec:
+        version: 7.13.3
+        nodeSets:
+        - name: default
+          count: 1
+          config:
+            node.store.allow_mmap: false
+  providerConfigRef:
+    name: provider-config-dev
+```
 
-Another example is the per-environment deployment. When you deploy application to multiple clusters where some clusters may have specific configuration than others, you may need per-environment configuration.
+This approach is very straightforward, but it does not allow you to customize the configuration. For example, in our case, if you want to deploy Elasticsearch using another version instead of the one defined in the above managed resource, you need a way to override the default configuration.
 
-Of course, if you have one folder for each environment in git, you can copy and paste all the manifests to each folder that maps to the specific environment and do the environment specific modifications there. This may lead to duplication that is hard to maintain when the repository grows.
+Another example is the per-environment deployment. When you deploy application to multiple clusters where some clusters may have specific configuration than others, you may need per-environment configuration. Of course, if you have one folder for each environment in git, you can copy and paste all the manifests to each folder that maps to the specific environment and do the environment specific modifications there. This may lead to duplication that is hard to maintain when the repository grows.
 
 #### Using Kustomize
 
 Per environment configuration can be done by [Kustomize](https://kustomize.io/). By using Kustomize, you can have the manifests with their default configuration at `base` layer, then specify the custom settings at `overlays` layer to override the base one.
 
-However, it should not be overused too much. The reason is that it obfuscates the understanding of what is actually deployed. If there are many kustomize-based versions of the same application manifests for different clusters, you have to assemble the final YAML in your head to understand what is actually deployed in each cluster. In such a case, a templated framework like Helm would help.
+However, it should not be overused too much. The reason is that it obfuscates the understanding of what is actually deployed. If there are many kustomize-based versions of the same application manifests for different clusters, you have to assemble the final YAML in your head or using `kustomize` CLI to understand what is actually deployed in each cluster. In such a case, a templated framework like Helm would help.
 
 ### Managed Resources As Template
 
@@ -48,7 +77,7 @@ Helm dynamically generates the configuration based on functions and parameters. 
 
 ![](images/managed-resource-template.png)
 
-The good news is that Argo CD supports Helm very well. You can override the configuration defined in `values.yaml` when you define Argo `Application` resource for your application to be deployed. As an example, in the below Argo `Application`, we customized the name of the capabilities and the namespace to be deployed via `spec.source.helm.parameters`.
+The good news is that Argo CD supports Helm very well. You can override the configuration defined in `values.yaml` when you define Argo `Application` resource for your application to be deployed. As an example, in the below Argo `Application`, we customized the name of the capabilities to be deployed via `spec.source.helm.parameters`.
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -66,8 +95,6 @@ spec:
     targetRevision: HEAD
     helm:
       parameters:
-        - name: metadata.namespace
-          value: dev
         - name: metadata.name
           value: dev-env-logging-stack
   project: default
@@ -103,6 +130,12 @@ spec:
       capability: logging
       provider: olm
 ```
+
+#### When to Check Composition and CompositeResourceDefinition in Git
+
+It depends on whether or not you want to expose these details to Ops or SREs. For example, if you want them to understand how the manged resources are organized, to be able to modify these compositions, or even define their own compositions as needed, then you should check Composition and CompositeResourceDefinition in git.
+
+#### Using Kustomize
 
 The `CompositeResourceClaim` resource is usually environment specific. That means you can put it into environment specific folder in git. However, if you want the resource to be reusable and only override it partially per environment, you can also use Kustomize. Below is a sample folder structure:
 
@@ -142,11 +175,10 @@ Before that, there is one thing you may need to know: Crossplane and Helm are no
 
 ### Crossplane Composition vs. Helm Templates
 
-A Crossplane `Composition` resource defines way of composing a set of Kubernetes resources. It is equivalent to Helm templates which include a set of template files and each file maps to one or more Kubernetes resources. The difference is that Composition organizes resources in a monolithic way where all resources are defined in the same file. But for Helm templates, they are separate files under the same folder. Certainly you can combine these files together as a single file to make it very similar to a Crossplane Compsotion resource, but they do have some differences in nature.
+A Crossplane `Composition` resource defines way of composing a set of Kubernetes resources. It is equivalent to Helm templates which include a set of template files and each file maps to one or more Kubernetes resources. A Crossplane Configuration package typically includes a set of Compositions, which map to multiple charts or sub-charts in Helm. The difference is that Composition organizes resources in a monolithic way where all resources are defined in the same file. But for Helm templates, they are separate files in the same folder or different folders. Certainly you can combine these files together as a single file to make it very similar to a Crossplane Compsotion resource, but they do have some differences in nature as below:
 
 * Instead of templating, Crossplane renders `Composition` resource by extracting values from `CompositeResource` (XR) or `CompositeResourceClaim` (XRC) resource and patching them to specific fields on managed resources. This is very similar to Kustomize.
-* A Crossplane Configuration package typically includes a set of Compositions, which map to multiple charts or sub-charts in Helm.
-* At a much higher level, we usually see Crossplane Composition is used to composing modules from infrastructure, service, to application in more coarse grained way. On the other hand, Helm usually focuses on "composing" modules at application level in more fine grained way.
+* At a much higher level, we usually see Crossplane Composition is used to composing modules from infrastructure, service, to application in more coarse grained way. On the other hand, Helm usually focuses on "composing" modules at application level in more fine grained way. But this does not mean you cannot compose infrastructure using Helm. For example, with the combined use of Crossplane Provider and Helm, you can compose infrastructure, service, and application too.
 
 ### CompositeResource(Claim), CompositeResourceDefinition vs. values.yaml
 
@@ -164,16 +196,16 @@ spec:
     kibanaVersion: 7.13.3
 ```
 
-The major difference between the two representations is that, Crossplane uses a more well-defined data structure to organize these configurable settings. That is `CompositeResourceDefinition` (XRD). By defining XRD, you can restrict user input with these settings in a more controlled manner. For example, each field has a type and can be required or optional. All user input verification happens at server side. This is very different from what Helm does. Also, each field can have a description so that the field can be well documented.
+The major difference between the two representations is that, Crossplane uses a more well-defined data structure to organize these configurable settings. That is `CompositeResourceDefinition` (XRD). By defining XRD, you can restrict user input with these settings in a more controlled manner. For example, each field has a type and can be required or optional. All user input verification happens at server side. This is very different from what Helm does. Also, each field can have a description so that the field can be well documented and self explained.
 
 Another apparent difference is that, GitOps tool such as Argo CD has integrated with Helm very well. You can specify custom settings in Argo `Application` resource, even from its UI, without touching `values.yaml` directly. Crossplane on the other side has no such level of integration yet.
 
-Here is a table that summarizes all above differences that we explored.
+Below is a table that summarizes all above differences that we explored.
 
 | Crossplane                  | Helm        | Description
 |:----------------------------|:------------|:-----
 | Composition                 | Templates   | Both to compose a set of Kubernetes resources, but Composition uses patch to override while Helm uses template.
-| CompositeResource(Claim)    | values.yaml | Both to allow user input as configurable settings. Argo CD has better support on Helm, e.g: to specify values in Argo `Application` resource or from UI.
+| CompositeResource(Claim)    | values.yaml | Both to allow user input as configurable settings. Argo CD has better support on Helm, e.g: to specify values in Argo `Application` resource.
 | CompositeResourceDefinition | n/a         | CompositeResourceDefinition as a schema has better user input control.
 
 And a diagram to depict the side-by-side comparison results.
