@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [Using Crossplane in GitOps](#using-crossplane-in-gitops)
+- [Using Crossplane in GitOps, Part I](#using-crossplane-in-gitops-part-i)
   - [Why Crossplane?](#why-crossplane)
   - [Bootstrap: Deploy Crossplane](#bootstrap-deploy-crossplane)
     - [Setup ProviderConfig](#setup-providerconfig)
