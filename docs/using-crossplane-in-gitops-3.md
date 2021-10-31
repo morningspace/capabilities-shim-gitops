@@ -4,11 +4,14 @@
 
 - [Using Crossplane in GitOps, Part III](#using-crossplane-in-gitops-part-iii)
   - [Deploying Order](#deploying-order)
+    - [Argo CD Syncwave](#argo-cd-syncwave)
     - [Dependency Resolving by Crossplane](#dependency-resolving-by-crossplane)
     - [Uninstall in Reversed Order](#uninstall-in-reversed-order)
   - [Using Hooks](#using-hooks)
     - [Argo CD Hooks](#argo-cd-hooks)
     - [Helm Hooks](#helm-hooks)
+  - [Health Check](#health-check)
+  - [Organizing Configuration](#organizing-configuration)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -17,6 +20,8 @@
 In this article, I will share my recent study on Crossplane use in GitOps. I will use Argo CD as the GitOps tool to demonstrate how Crossplane can work with it to provision applications from git to target cluster. Meanwhile, I will also explore some best practices, common considerations, and lessons learned that you might experience as well when use Crossplane in GitOps.
 
 ## Deploying Order
+
+### Argo CD Syncwave
 
 It is a common case where an application may be composed by multiple modules and some modules depend on other modules. When GitOps tool synchronizes these modules to target cluster, they need to be appled in a specific order. As an example, the deployment of Crossplane needs to be finished prior to the deployment of a Crossplane configuration package. This is because the configuration package requires some Crossplane CRDs available before it can be deployed. These CRDs come from the Crossplane deployment.
 
@@ -192,6 +197,122 @@ Helm also supports hooks. It allows chart developers to intervene at certain poi
 
 Interestingly, Argo CD supports Helm hooks by mapping the Helm annotations onto Argo CD's own hook annotations. When Argo CD synchronizes Helm charts, a Helm hook can usually be transformed to an Argo CD hook without additional work. For example, the pre-install hook in Helm is equivalent to the PreSync hook in Argo CD, and the post-install hook in Helm is equivalent to the PostSync hook in Argo CD. For more details, please check the [Argo CD document](https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-hooks) where it includes a mapping table between Helm hooks and Argo CD hooks.
 
-However, one thing to note is that not all Helm hooks have equivalents in Argo CD. For example, there's no equivalent in Argo CD for Helm post-delete hook. That means if you define some job as post-delete hook in Helm, they will never be triggered in Argo CD.
+However, one thing to note is that not all Helm hooks have equivalents in Argo CD. For example, there's no equivalent in Argo CD for Helm post-delete hook. That means if you define some job as post-delete hook in Helm, they will never be triggered in Argo CD. [An issue](https://github.com/argoproj/argo-cd/issues/7575) on this was opened in Argo CD community.
 
 In Crossplane, there is no concept such as hooks. So, if you want to do something before or after a certain synchronization, you may still resort to Helm or Argo CD.
+
+## Health Check
+
+To check the desired state in git and ask Argo CD to synchronize it is just one side. The other side is to ensure what you deployed is healthy by checking the actual state in target cluster. 
+
+Argo CD provides built-in health assessment for several kubernetes resources. It can be further customized by writing your own health checks in Lua code. This is useful if you have a custom resource for which Argo CD does not have a built-in health check. You may find the more you rely on Argo CD for resource health check, the less you go back to check that by using kubectl from command line.
+
+It is very common in Crossplane for its providers which have their own managed resources and do not have built-in health checks support in Argo CD. Thus, you should define your own health checks for Crossplane providers.
+
+In our demo project, we defined custom health checks for those resource types handled by OLM and operators launched by OLM, also the checks for the managed resource type `Object` handled by provider kubernetes. All these custom health checks should be added to a ConfigMap called `argocd-cm` in the namespace where Argo CD is deployed. Again, this ConfigMap can be checked in git so that can be synchronized by Argo CD as well.
+
+For example, below is a sample snippet for the ConfigMap which includes the custom health checks for the resource type `ClusterServiceVersion` handled by OLM and the custom resource `Elasticsearch` handled by Elasticsearch operator. Typically, you need to assess the resource healthiness by querying sub-fields under the resource status field. You can also construct a status message as below to reveal more detailed information:
+
+```yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  resource.customizations.health.operators.coreos.com_ClusterServiceVersion: |
+    hs = {}
+    hs.status = "Progressing"
+    hs.message = ""
+    if obj.status ~= nil then
+      if obj.status.phase == "Succeeded" then
+        hs.status = "Healthy"
+      end
+      hs.message = obj.status.message
+    end
+    return hs
+  resource.customizations.health.elasticsearch.k8s.elastic.co_Elasticsearch: |
+    hs = {}
+    hs.status = "Progressing"
+    hs.message = ""
+    if obj.status ~= nil and obj.status.health ~= nil and obj.status.phase ~= nil then
+      if obj.status.health == "green" and obj.status.phase == "Ready" then
+        hs.status = "Healthy"
+      end
+      hs.message = "health = " .. obj.status.health .. " phase = " .. obj.status.phase
+    end
+    return hs
+```
+
+For the health check of `Object` resource handled by provider kubernetes, it is a bit more complex. 
+
+```yaml
+  resource.customizations.health.kubernetes.crossplane.io_Object: |
+    hs = {}
+    hs.status = "Progressing"
+    hs.message = ""
+    if obj.status ~= nil and obj.status.atProvider ~= nil then
+      kind = obj.spec.forProvider.manifest.kind
+      res = obj.status.atProvider.manifest
+      if res ~= nil then
+        if kind == "ClusterServiceVersion" then
+          if res.status ~= nil then
+            if res.status.phase == "Succeeded" then
+              hs.status = "Healthy"
+            end
+            hs.message = res.status.message
+          end
+        elseif kind == "Elasticsearch" then
+          if res.status ~= nil and res.status.health ~= nil and res.status.phase ~= nil then
+            if res.status.health == "green" and res.status.phase == "Ready" then
+              hs.status = "Healthy"
+            end
+            hs.message = "health = " .. res.status.health .. " phase = " .. res.status.phase
+          end
+        end
+      end
+    end
+    return hs
+```
+
+## Organizing Configuration
+
+As we all know, in GitOps, the git repository used to store desired state for target system is the single source of truth, but there is no single answer on how the desired state should be organized in git repository. Although each team may have its own consideration on this for variant reasons, there are some common suggestions as following:
+
+- Place common configuration that can be applied to all environments in one single place. This may include the common infrastructure configuration, shared applications and their settings that are applicable to all environments. For example, in the demo project, we use `config/` folder to store all configuration required to deploy Crossplane and its provider, OLM, Sealed Secret Controller, as well as the Argo CD customization settings and RBAC settings.
+
+- Place per-environment configuration in separate places and one place for each environment. Some environment may have its unique configuration which can be put in a place represents that specific environment. For example, there can be separate folders for dev, staging, and product environment. In our demo project, we use `environments/` folder to host all environment specific configuration, where we place the Crossplane ProviderConfig, the encrypted secret that represents the target cluster kubeconfig credentials, and so on. These are all configuration unique to each cluster.
+
+- Use branch to track per-release configuration. It is a very common practice for developer to track code changes among different releases using git release branch, especially when you have multiple releases that need to be maintained at the same time. The same rules apply to configuration changes in GitOps. When you have multiple releases to support and the configuration keeps changing from release to release, you can create branch for each release.
+Of course, it will bring additional effort to merge changes among branches and resolve merge conflicts when needed. The good thing is, all branching and merging practices that you have already been familar with when dealing with code changes can also be applied to the configuration changes.
+
+- Host multiple applications manifests in a monolithic repository. This is a very effective way to manage applications in a small project where you put all applications configuration manifests in a single repository. It can be stored in separate folders, one folder for each application.
+
+- Host multiple applications manifests separately in multiple repositories. This is suitable for a large project in which you may have multiple products, each product has its own set of applications, and maintained by different team. By putting configuration manifests for these applications in separate repositories, you can leverage the sophisticated organization or repository membership and access control capabilities provided by the git infrastructure provider such as GitHub, to manage application deployment for each team differently in a fine grained manner.
+
+- Use Helm to parameterize deployment manifests and turn into reusable templates. In some cases, you may want your application manifests to be configurable, e.g.: to allow Ops or SREs to choose which version to install, which storage to pick up, or which namespace to apply, etc. Helm as a deployment tool for Kubernetes application is widely used. It can help you extract parameters out of deployment manifest, and turn the manifest into a reusable template. Helm can also be used together with Crossplane, especially when you only use Crossplane providers to provision applications and, do not use its composition. In such case, Crossplane plays very similar role as Kubernetes contoller or Operator does with its wide range of providers that extend the scope of what you can manage using GitOps.
+ 
+
+- Use Kustomize to override deployment manifests as a base for a specific environment. In some cases, you may want your application manifests to be customized on a per enironment basis. Instead of Helm, this can also be achieved by using Kustomize. You can put the manifests with default configuration in a folder as a base layer, then put environment specific manifest pieces in a separate folder that represents a specific environment to override the base layer. This can also be applied when you use Crossplane, especially when using composition. For example, you can define the default CompositeResourceClaim (XRC) at base layer, then override it at environment specific layer.
+
+- Use App of Apps pattern when use Argo CD to mange a set of applications. In Argo CD, an `Application` resource is a unit that deploys a set of manifests. Since an Application is a Kubernetes resource, it can be managed by Argo CD too. Furthermore, an Application resource can manage multiple other Application resources. That is called App of Apps pattern. By using this pattern, you can deploy a set of applications in one go. Also, increasing or decreasing Application resources can be done by adding or removing manifests to git repository instead of operating Argo CD via its Web UI or command line.
+
+Below is a sample structure for a git repository to demonstrate how folders can be organized base on the above discussion:
+
+```console
+├── config
+│   ├── argocd-apps
+│   ├── infra
+│   ├── services
+│   └── apps
+└── environments
+    ├── base
+    └── overlays
+        ├── dev
+        ├── staging
+        └── prod
+```
