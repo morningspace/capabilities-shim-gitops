@@ -2,6 +2,8 @@
 
 This repository is used to demonstrate how to effectively adopt Crossplane in GitOps by using a sample application. The sample application is based on another demo project [capabilities-shim](https://github.com/morningspace/capabilities-shim) that I created to prove the technical feasibility of composing variant existing software capabilities using Crossplane to come up with solution that meets user specific needs.
 
+![](docs/images/crossplane-in-gitops.png)
+
 ## What it covers?
 
 The repository includes:
