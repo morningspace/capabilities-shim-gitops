@@ -11,7 +11,9 @@
 
 # Using Crossplane in GitOps, Part I
 
-In this article, I will share my recent study on Crossplane use in GitOps. I will use Argo CD as the GitOps tool to demonstrate how Crossplane can work with it to provision applications from git to target cluster. Meanwhile, I will also explore some best practices, common considerations, and lessons learned that you might experience as well when use Crossplane in GitOps.
+In this series of articles, I will share my recent study on using Crossplane in GitOps. I will use Argo CD as the GitOps tool to demonstrate how Crossplane can work with it to provision applications from git to target cluster. Meanwhile, I will also explore some best practices, common considerations, and lessons learned that you might experience as well when use Crossplane in GitOps.
+
+This article particularly focuses on why Crossplane fits into GitOps and how to bootstrap Crossplane using GitOps.
 
 ## Why Crossplane?
 
