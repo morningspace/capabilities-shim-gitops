@@ -16,11 +16,11 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Using Crossplane in GitOps, Part II 
+# Using Crossplane in GitOps, Part II: What to Check in Git
 
 In this series of articles, I will share my recent study on using Crossplane in GitOps. I will use Argo CD as the GitOps tool to demonstrate how Crossplane can work with it to provision applications from git to target cluster. Meanwhile, I will also explore some best practices, common considerations, and lessons learned that you might experience as well when use Crossplane in GitOps.
 
-This article particularly focuses on what to store in git for Crossplane and a side-by-side comparison between Crossplane and Helm as deployment tools.
+This article particularly focuses on what to store in git for Crossplane and a side-by-side comparison between Crossplane and Helm as deployment tools. You can find the demo project on GitHub at: https://github.com/morningspace/capabilities-shim-gitops.
 
 ## Store Manifests in Git Repository
 

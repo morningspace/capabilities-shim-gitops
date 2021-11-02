@@ -15,17 +15,17 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Using Crossplane in GitOps, Part III
+# Using Crossplane in GitOps, Part III: Common Considerations
 
 In this series of articles, I will share my recent study on using Crossplane in GitOps. I will use Argo CD as the GitOps tool to demonstrate how Crossplane can work with it to provision applications from git to target cluster. Meanwhile, I will also explore some best practices, common considerations, and lessons learned that you might experience as well when use Crossplane in GitOps.
 
-This article particularly focuses on some common considerations that you may have when using Crossplane in GitOps such as deploying order, using hooks, health check, organizing configuration.
+This article particularly focuses on some common considerations that you may have when using Crossplane in GitOps such as deploying order, using hooks, health check, organizing configuration. You can find the demo project on GitHub at: https://github.com/morningspace/capabilities-shim-gitops.
 
 ## Deploying Order
 
 ### Argo CD Syncwave
 
-It is a common case where an application may be composed by multiple modules and some modules depend on other modules. When GitOps tool synchronizes these modules to target cluster, they need to be appled in a specific order. As an example, the deployment of Crossplane needs to be finished prior to the deployment of a Crossplane configuration package. This is because the configuration package requires some Crossplane CRDs available before it can be deployed. These CRDs come from the Crossplane deployment.
+It is a common case where an application may be composed of multiple modules and some modules depend on other modules. When GitOps tool synchronizes these modules to target cluster, they need to be applied in a specific order. As an example, the deployment of Crossplane needs to be finished prior to the deployment of a Crossplane configuration package. This is because the configuration package requires some Crossplane CRDs available before it can be deployed. These CRDs come from the Crossplane deployment.
 
 In Argo CD, this can be solved by using syncwave. Syncwaves are used to order how manifests are applied or synchronized by Argo CD to the cluster. You can have one or more waves, that allows you to ensure certain resources are healthy before subsequent resources are synchronized.
 
@@ -77,7 +77,7 @@ metadata:
 
 ### Dependency Resolving by Crossplane
 
-Using syncwave to guarantee the resource synchronization order is a very useful practice. But it also makes your GitOps solution coupled with a specific GitOps tool. For example, you may need to figure out a similar approach if you switch from Argo CD to Flux CD as Flux does not recogonize the Argo CD syncwave annotations.
+Using syncwave to guarantee the resource synchronization order is a very useful practice. But it also makes your GitOps solution coupled with a specific GitOps tool. For example, you may need to figure out a similar approach if you switch from Argo CD to Flux CD as Flux does not recognize the Argo CD syncwave annotations.
 
 Crossplane, on the other hand, might help in this case. This is because it can provide a way to define the deploying order for a set of composable resources while remains neutral to GitOps tools. Although this has not been there yet, there is a design proposal in community called [Generic References](https://github.com/crossplane/crossplane/pull/2385) which is currently under discussion. This design can help us define resource dependency and do more than that.
 
@@ -95,7 +95,7 @@ spec:
     toFieldPath: spec.forProvider.region
 ```
 
-By defining references, we can ask Crossplane to help us resolve dependencies and patch missing fields as above if needed. Thus, we can keep deploying order without depending on Argo CD. Argo CD can simply sychronize all the resources in one go, then Crossplane will handle the deploying order for these resources properly.
+By defining references, we can ask Crossplane to help us resolve dependencies and patch missing fields as above if needed. Thus, we can keep deploying order without depending on Argo CD. Argo CD can simply synchronize all the resources in one go, then Crossplane will handle the deploying order for these resources properly.
 
 Although this design has not been closed yet, a similar idea has been implemented in [the enhanced version](https://github.com/morningspace/provider-kubernetes) of provider-kubernetes. When an `Object` resource is define, the managed resource defined and handled by provider-kubernetes, it allows you to specify one or more references in `spec.references` using exactly the same syntax as it is defined in the above design.
 
@@ -127,7 +127,7 @@ spec:
     name: provider-config-dev
 ```
 
-This approach has been adopted in the gitops demo project: [capabilities-shim-gitops](https://github.com/morningspace/capabilities-shim-gitops). For more information on the enhanced version of provider-kubernetes, please check [this document](https://github.com/morningspace/capabilities-shim/blob/main/docs/enhanced-provider-k8s.md).
+This approach has been adopted in the GitOps demo project: [capabilities-shim-gitops](https://github.com/morningspace/capabilities-shim-gitops). For more information on the enhanced version of provider-kubernetes, please check [this document](https://github.com/morningspace/capabilities-shim/blob/main/docs/enhanced-provider-k8s.md).
 
 ### Uninstall in Reversed Order
 
@@ -135,7 +135,7 @@ Although it may not be very often in a real customer environment where people wa
 
 Interestingly, Argo CD supports this case for its syncwave feature. There is [an issue](https://github.com/argoproj/argo-cd/issues/3211) reported for this as an enhancement and it has been implemented since v1.7. So, if I have two resources and specify the syncwave that resource a needs to be synchronized before resource b. When deleting these resources, it should delete resource b first, and then resource a.
 
-On the other hand, Crossplande does not support this at the time of 	writing. It is also not covered in the [Generic References](https://github.com/crossplane/crossplane/pull/2385) design proposal. But [the enhanced version](https://github.com/morningspace/provider-kubernetes) of provider-kubernetes has implemented that. It is achieved by applying a set of finalizers to the managed resources sequentially. More on this can be found [in this section](https://github.com/morningspace/capabilities-shim/blob/main/docs/enhanced-provider-k8s.md#uninstall-order) from its design document.
+On the other hand, Crossplane does not support this at the time of 	writing. It is also not covered in the [Generic References](https://github.com/crossplane/crossplane/pull/2385) design proposal. But [the enhanced version](https://github.com/morningspace/provider-kubernetes) of provider-kubernetes has implemented that. It is achieved by applying a set of finalizers to the managed resources sequentially. More on this can be found [in this section](https://github.com/morningspace/capabilities-shim/blob/main/docs/enhanced-provider-k8s.md#uninstall-order) from its design document.
 
 ## Using Hooks
 
@@ -205,7 +205,7 @@ In Crossplane, there is no concept such as hooks. So, if you want to do somethin
 
 ## Health Check
 
-To check the desired state in git and ask Argo CD to synchronize it is just one side. The other side is to ensure what you deployed is healthy by checking the actual state in target cluster. 
+To check the desired state in git and ask Argo CD synchronize it is just one side. The other side is to ensure what you deployed is healthy by checking the actual state in target cluster. 
 
 Argo CD provides built-in health assessment for several kubernetes resources. It can be further customized by writing your own health checks in Lua code. This is useful if you have a custom resource for which Argo CD does not have a built-in health check. You may find the more you rely on Argo CD for resource health check, the less you go back to check that by using kubectl from command line.
 
@@ -290,16 +290,16 @@ As we all know, in GitOps, the git repository used to store desired state for ta
 - Place per-environment configuration in separate places and one place for each environment. Some environment may have its unique configuration which can be put in a place represents that specific environment. For example, there can be separate folders for dev, staging, and product environment. In our demo project, we use `environments/` folder to host all environment specific configuration, where we place the Crossplane ProviderConfig, the encrypted secret that represents the target cluster kubeconfig credentials, and so on. These are all configuration unique to each cluster.
 
 - Use branch to track per-release configuration. It is a very common practice for developer to track code changes among different releases using git release branch, especially when you have multiple releases that need to be maintained at the same time. The same rules apply to configuration changes in GitOps. When you have multiple releases to support and the configuration keeps changing from release to release, you can create branch for each release.
-Of course, it will bring additional effort to merge changes among branches and resolve merge conflicts when needed. The good thing is, all branching and merging practices that you have already been familar with when dealing with code changes can also be applied to the configuration changes.
+Of course, it will bring additional effort to merge changes among branches and resolve merge conflicts when needed. The good thing is, all branching and merging practices that you have already been familiar with when dealing with code changes can also be applied to the configuration changes.
 
 - Host multiple applications manifests in a monolithic repository. This is a very effective way to manage applications in a small project where you put all applications configuration manifests in a single repository. It can be stored in separate folders, one folder for each application.
 
 - Host multiple applications manifests separately in multiple repositories. This is suitable for a large project in which you may have multiple products, each product has its own set of applications, and maintained by different team. By putting configuration manifests for these applications in separate repositories, you can leverage the sophisticated organization or repository membership and access control capabilities provided by the git infrastructure provider such as GitHub, to manage application deployment for each team differently in a fine grained manner.
 
-- Use Helm to parameterize deployment manifests and turn into reusable templates. In some cases, you may want your application manifests to be configurable, e.g.: to allow Ops or SREs to choose which version to install, which storage to pick up, or which namespace to apply, etc. Helm as a deployment tool for Kubernetes application is widely used. It can help you extract parameters out of deployment manifest, and turn the manifest into a reusable template. Helm can also be used together with Crossplane, especially when you only use Crossplane providers to provision applications and, do not use its composition. In such case, Crossplane plays very similar role as Kubernetes contoller or Operator does with its wide range of providers that extend the scope of what you can manage using GitOps.
+- Use Helm to parameterize deployment manifests and turn into reusable templates. In some cases, you may want your application manifests to be configurable, e.g.: to allow Ops or SREs to choose which version to install, which storage to pick up, or which namespace to apply, etc. Helm as a deployment tool for Kubernetes application is widely used. It can help you extract parameters out of deployment manifest, and turn the manifest into a reusable template. Helm can also be used together with Crossplane, especially when you only use Crossplane providers to provision applications and, do not use its composition. In such case, Crossplane plays very similar role as Kubernetes controller or Operator does with its wide range of providers that extend the scope of what you can manage using GitOps.
  
 
-- Use Kustomize to override deployment manifests as a base for a specific environment. In some cases, you may want your application manifests to be customized on a per enironment basis. Instead of Helm, this can also be achieved by using Kustomize. You can put the manifests with default configuration in a folder as a base layer, then put environment specific manifest pieces in a separate folder that represents a specific environment to override the base layer. This can also be applied when you use Crossplane, especially when using composition. For example, you can define the default CompositeResourceClaim (XRC) at base layer, then override it at environment specific layer.
+- Use Kustomize to override deployment manifests as a base for a specific environment. In some cases, you may want your application manifests to be customized on a per environment basis. Instead of Helm, this can also be achieved by using Kustomize. You can put the manifests with default configuration in a folder as a base layer, then put environment specific manifest pieces in a separate folder that represents a specific environment to override the base layer. This can also be applied when you use Crossplane, especially when using composition. For example, you can define the default CompositeResourceClaim (XRC) at base layer, then override it at environment specific layer.
 
 - Use App of Apps pattern when use Argo CD to mange a set of applications. In Argo CD, an `Application` resource is a unit that deploys a set of manifests. Since an Application is a Kubernetes resource, it can be managed by Argo CD too. Furthermore, an Application resource can manage multiple other Application resources. That is called App of Apps pattern. By using this pattern, you can deploy a set of applications in one go. Also, increasing or decreasing Application resources can be done by adding or removing manifests to git repository instead of operating Argo CD via its Web UI or command line.
 
