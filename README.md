@@ -49,6 +49,13 @@ ln -s -f /root/Code/capabilities-shim-gitops/scripts/.cache/tools/linux_x86_64/k
 
 It also prints the Argo CD UI address, the username and password that you can use to login.
 
+### Argocd cli login for cli operations
+```shell
+argocd login localhost:9443 --username admin
+Proceed insecurely (y/n)? y
+Password:
+```
+
 ### Install everything else using Argo CD
 
 Login to Argo CD from UI, then create an Argo Application using the following values:
@@ -70,8 +77,7 @@ You can also do the same thing using argocd CL from command line as below:
 argocd app create shared-app --repo https://github.com/morningspace/capabilities-shim-gitops.git \
   --path config/shared \
   --dest-namespace default \
-  --dest-server https://kubernetes.default.svc \
-  --directory-recurse
+  --dest-server https://kubernetes.default.svc
 ```
 
 This will install Crossplane with its providers, OLM, Sealed Secrets Controller, etc. to your demo environment.
